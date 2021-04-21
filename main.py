@@ -3,8 +3,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.feature_selection import chi2
-from sklearn.neighbors import KNeighborsClassifier as knn
+from sklearn.neighbors import KNeighborsClassifier as knc
+from sklearn.model_selection import cross_val_score
+from statistics import mean
 from textwrap import wrap
+
+clfs = {
+    'k1euclidean': knc(n_neighbors=1, metric='euclidean'),
+    'k5euclidean': knc(n_neighbors=5, metric='euclidean'),
+    'k10euclidean': knc(n_neighbors=10, metric='euclidean'),
+    'k1manhattan': knc(n_neighbors=1, metric='manhattan'),
+    'k5manhattan': knc(n_neighbors=5, metric='manhattan'),
+    'k10manhattan': knc(n_neighbors=10, metric='manhattan'),
+}
 
 cechy = [
     'Temperatura',
@@ -20,7 +31,7 @@ cechy = [
     'Uszkodzenie w sercu, plucach, nerce',
     'Galka oczna',
     'Poziom WBC',
-    'Obnizenie lizby RBC',
+    'Obnizenie lizby RRC',
     'Liczba plytek krwi',
     'Niedojrzale komorki',
     'Stan pobudzenia szpiku',
@@ -30,15 +41,16 @@ cechy = [
 ]
 
 dfs = pd.read_excel("białaczka.xlsx")
+X = dfs[dfs.columns[:20]]
+y = dfs["Klasa"]
 
-chi_value, p_value = chi2(dfs[dfs.columns[:20]], dfs["Klasa"])
+chi_value, p_value = chi2(X, y)
 
 unsorted = list(zip(cechy, chi_value))
 unsorted_2 = sorted(unsorted, key=lambda x: x[1])
 sorted_s = [[i for i, j in unsorted_2], [j for i, j in unsorted_2]]
 
 y_pos = np.arange(len(chi_value))
-
 labels = ['\n'.join(wrap(i, width=20)) for i in sorted_s[0]]
 
 plt.figure(figsize=(15, 15))
@@ -50,4 +62,14 @@ plt.yticks(y_pos, labels)
 for i in range(20):
     plt.text(sorted_s[1][i], i, '%.3f' % sorted_s[1][i])
 
-plt.show()
+#plt.show()
+
+val = []
+y_val = dfs.iloc[:, 20]
+for key in clfs:
+    for i in range(len(sorted_s[0]) - 1, -1, -1):
+        used = dfs[dfs.columns[sorted_s[0][-1:i]]]
+        print(used.dtypes)
+        for j in range(4):
+            print(cross_val_score(clfs[key], used, y, cv=2, scoring='accuracy'))
+    mean(val)
