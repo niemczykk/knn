@@ -14,7 +14,7 @@ clfs = {
     'k10euclidean': knc(n_neighbors=10, metric='euclidean'),
     'k1manhattan': knc(n_neighbors=1, metric='manhattan'),
     'k5manhattan': knc(n_neighbors=5, metric='manhattan'),
-    'k10manhattan': knc(n_neighbors=10, metric='manhattan'),
+    'k10manhattan': knc(n_neighbors=10, metric='manhattan')
 }
 
 cechy = [
@@ -62,14 +62,16 @@ plt.yticks(y_pos, labels)
 for i in range(20):
     plt.text(sorted_s[1][i], i, '%.3f' % sorted_s[1][i])
 
-#plt.show()
-
+dfs_list = np.array(dfs.values.tolist(), dtype='int64')
 val = []
-y_val = dfs.iloc[:, 20]
 for key in clfs:
+    print(key)
+    used = [[] for i in range(410)]
     for i in range(len(sorted_s[0]) - 1, -1, -1):
-        used = dfs[dfs.columns[sorted_s[0][-1:i]]]
-        print(used.dtypes)
+        print(i)
+        for index, tab in enumerate(used):
+            tab.append(dfs_list[index, dfs.columns.tolist().index(sorted_s[0][i])])
         for j in range(4):
-            print(cross_val_score(clfs[key], used, y, cv=2, scoring='accuracy'))
-    mean(val)
+            scores = cross_val_score(clfs[key], used, y, cv=2, scoring='accuracy', n_jobs=4)
+            val.append(scores.mean())
+        print(mean(val))
